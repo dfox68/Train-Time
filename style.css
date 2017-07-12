@@ -1,0 +1,19 @@
+#tableRow {
+  collapse: separate;
+  border-spacing: 10px;
+}
+.jumbotron {
+  background-color: black;
+  color: white;
+}
+.panel-default .panel-heading {
+  background-color: blue;
+  color: white;
+}
+body {
+  background-color: grey;
+}
+.btn-default {
+  background-color: blue;
+  color: white;
+}
