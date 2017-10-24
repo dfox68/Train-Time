@@ -9,90 +9,76 @@ var config = {
 };
 firebase.initializeApp(config);
 
-// Create a variable to reference the database.
 var trainData = firebase.database();
 
-$("#add-train").on("click", function(event) {
-  event.preventDefault();
+$("#add-train-btn").on("click", function() {
 
-  //variables to store user input
-  var trainName = $("#trainName-input")
-    .val()
-    .trim();
-  var destination = $("#destination-input")
-    .val()
-    .trim();
-  var firstTrain = moment(
-    $("#firstTrainTime-input")
-      .val()
-      .trim(),
-    "HH:mm"
-  )
-    .subtract(10, "years")
-    .format("X");
+  // Grabs user input
+  var trainName = $("#train-name-input").val().trim();
+  var destination = $("#destination-input").val().trim();
+  var firstTrainUnix = moment($("#first-train-input").val().trim(), "HH:mm").subtract(10, "years").format("X");
+  var frequency = $("#frequency-input").val().trim();
 
-  var frequency = $("#frequency-input")
-    .val()
-    .trim();
-
+  // Creates local "temporary" object for holding train data
   var newTrain = {
-    trainName: trainName,
+
+    name: trainName,
     destination: destination,
-    firstTrain: firstTrain,
+    firstTrain: firstTrainUnix,
     frequency: frequency
   };
 
+  // Uploads train data to the database
   trainData.ref().push(newTrain);
 
+  // Logs everything to console
   console.log(newTrain.name);
   console.log(newTrain.destination);
+  console.log(firstTrainUnix);
+  console.log(newTrain.frequency);
 
+  // Alert
+  alert("Train successfully added");
+
+  // Clears all of the text-boxes
+  $("#train-name-input").val("");
+  $("#destination-input").val("");
+  $("#first-train-input").val("");
+  $("#frequency-input").val("");
+
+  // Determine when the next train arrives.
   return false;
 });
 
+// 4. Create Firebase event for adding trains to the database and a row in the html when a user adds an entry
+trainData.ref().on("child_added", function(childSnapshot, prevChildKey) {
 
-//calculate when next train will arrive
+  console.log(childSnapshot.val());
 
-//get current time
-var currentTime = moment();
-console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+  // Store everything into a variable.
+  var tName = childSnapshot.val().name;
+  var tDestination = childSnapshot.val().destination;
+  var tFrequency = childSnapshot.val().frequency;
+  var tFirstTrain = childSnapshot.val().firstTrain;
 
-//get the first train time
-// First Time (pushed back 1 year to make sure it comes before current time)
-firstTrain = moment(firstTrain, "hh:mm").subtract(1, "years");
-console.log(firstTrain);
+  // Calculate the minutes until arrival using hardcore math
+  // To calculate the minutes till arrival, take the current time in unix subtract the FirstTrain time
+  // and find the modulus between the difference and the frequency.
+  var differenceTimes = moment().diff(moment.unix(tFirstTrain), "minutes");
+  var tRemainder = moment().diff(moment.unix(tFirstTrain), "minutes") % tFrequency;
+  var tMinutes = tFrequency - tRemainder;
 
-//get the difference between the times
-diffTime = moment().diff(moment(firstTrain), "minutes");
-console.log("DIFFERENCE IN TIME: " + diffTime);
+  // To calculate the arrival time, add the tMinutes to the currrent time
+  var tArrival = moment().add(tMinutes, "m").format("hh:mm A");
 
-//get time apart(remainder)
-tRemainder = diffTime % frequency;
-console.log("Remainder is: " + tRemainder);
+  console.log(tMinutes);
+  console.log(tArrival);
+  console.log(moment().format("hh:mm A"));
+  console.log(tArrival);
+  console.log(moment().format("X"));
 
-tMinutesTillTrain = frequency - tRemainder;
-console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
-
-//display data on webpage
-database.ref().on("child_added", function(childSnapshot) {
-  console.log(childSnapshot.val().trainName);
-  var p = $(
-    "<tr class='myRow'>" +
-      "<td class='col-lg-2'>" +
-      childSnapshot.val().trainName +
-      "</td>" +
-      "<td class='col-lg-2'>" +
-      childSnapshot.val().destination +
-      "</td>" +
-      "<td class='col-lg-2'>" +
-      childSnapshot.val().frequency +
-      "</td>" +
-      "<td class='col-lg-2'>" +
-      childSnapshot.val().nextArrival +
-      "</td>" +
-      "<td class='col-lg-2'>" +
-      childSnapshot.val().tMinutesTillTrain +
-      "</td></tr>"
-  );
-  $("#tableRow").append(p);
+  // Add each train's data into the table
+  $("#train-table > tbody").append("<tr><td>" + tName + "</td><td>" + tDestination + "</td><td>"
+  + tFrequency + "</td><td>" + tArrival + "</td><td>" + tMinutes + "</td></tr>");
 });
+
