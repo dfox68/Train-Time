@@ -19,7 +19,7 @@ $("#add-train-btn").on("click", function() {
   var firstTrainUnix = moment($("#first-train-input").val().trim(), "HH:mm").subtract(10, "years").format("X");
   var frequency = $("#frequency-input").val().trim();
 
-  // Creates local "temporary" object for holding train data
+  // local object for holding train data
   var newTrain = {
 
     name: trainName,
@@ -28,29 +28,29 @@ $("#add-train-btn").on("click", function() {
     frequency: frequency
   };
 
-  // Uploads train data to the database
+  // Pushes train data to the database
   trainData.ref().push(newTrain);
 
-  // Logs everything to console
+  // Log to console
   console.log(newTrain.name);
   console.log(newTrain.destination);
   console.log(firstTrainUnix);
   console.log(newTrain.frequency);
 
-  // Alert
+  
   alert("Train successfully added");
 
-  // Clears all of the text-boxes
+  // Clears all of the text boxes
   $("#train-name-input").val("");
   $("#destination-input").val("");
   $("#first-train-input").val("");
   $("#frequency-input").val("");
 
-  // Determine when the next train arrives.
+  // Determine when the next train arrives
   return false;
 });
 
-// 4. Create Firebase event for adding trains to the database and a row in the html when a user adds an entry
+// Create Firebase event for adding trains to the database and a row in the html when a user adds an entry
 trainData.ref().on("child_added", function(childSnapshot, prevChildKey) {
 
   console.log(childSnapshot.val());
